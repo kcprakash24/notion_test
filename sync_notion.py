@@ -1,5 +1,6 @@
 import os
 import re
+import requests
 from notion_client import Client
 
 NOTION_TOKEN = os.environ["NOTION_TOKEN"]
@@ -8,6 +9,17 @@ OUTPUT_DIR = "blogs"
 
 notion = Client(auth=NOTION_TOKEN)
 
+def download_image(url: str, assets_dir: str) -> str:
+    os.makedirs(assets_dir, exist_ok=True)
+    filename = url.split("/")[-1].split("?")[0]
+    if not filename.lower().endswith((".png", ".jpg", ".jpeg", ".gif", ".webp")):
+        filename += ".png"
+    filepath = os.path.join(assets_dir, filename)
+    response = requests.get(url, timeout=30)
+    response.raise_for_status()
+    with open(filepath, "wb") as f:
+        f.write(response.content)
+    return f"./assets/{filename}"
 
 def slugify(title: str) -> str:
     title = title.lower().strip()
@@ -56,7 +68,8 @@ def get_slug(page: dict) -> str:
     return slugify(get_title(page))
 
 
-def block_to_md(block: dict) -> str:
+def block_to_md(block: dict, assets_dir: str = None) -> str:
+
     t = block["type"]
     b = block[t]
 
@@ -106,6 +119,11 @@ def block_to_md(block: dict) -> str:
         src = b.get("file", {}).get("url") or b.get("external", {}).get("url", "")
         caption = rich_text(b.get("caption", []))
         alt = caption or "image"
+        if src and assets_dir:
+            try:
+                src = download_image(src, assets_dir)
+            except Exception as e:
+                print(f"    Warning: could not download image: {e}")
         return f"![{alt}]({src})\n"
     elif t == "callout":
         icon = b.get("icon", {}).get("emoji", "")
@@ -116,7 +134,7 @@ def block_to_md(block: dict) -> str:
         return ""
 
 
-def get_page_markdown(page_id: str) -> str:
+def get_page_markdown(page_id: str, assets_dir: str = None) -> str:
     lines = []
     cursor = None
 
@@ -128,7 +146,7 @@ def get_page_markdown(page_id: str) -> str:
         response = notion.blocks.children.list(**kwargs)
 
         for block in response["results"]:
-            md = block_to_md(block)
+            md = block_to_md(block, assets_dir)
             if md:
                 lines.append(md)
 
@@ -159,7 +177,8 @@ def sync():
         folder = os.path.join(OUTPUT_DIR, slug)
         os.makedirs(folder, exist_ok=True)
 
-        md = get_page_markdown(page["id"])
+        assets_dir = os.path.join(folder, "assets")
+        md = get_page_markdown(page["id"], assets_dir)
         full_md = f"# {title}\n\n{md}"
 
         with open(os.path.join(folder, "index.md"), "w", encoding="utf-8") as f:
