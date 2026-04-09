@@ -2,7 +2,6 @@
 
 A GitHub Actions workflow that pulls blog posts from a Notion database into your repository as `.mdx` files — triggered manually whenever you want.
 
----
 
 ## What It Does
 
@@ -11,7 +10,7 @@ A GitHub Actions workflow that pulls blog posts from a Notion database into your
 - Downloads all images locally into an `assets/` folder
 - Commits and pushes everything to your repo
 
----
+
 
 ## Repo Structure
 
@@ -30,7 +29,6 @@ your-repo/
 └── requirements.txt
 ```
 
----
 
 ## Notion Database Schema
 
@@ -45,7 +43,6 @@ Your Notion database must have these properties:
 | `Tags` | Multi-select | Appears in frontmatter |
 | `Summary` | Text | One line description |
 
----
 
 ## Generated Frontmatter
 
@@ -63,7 +60,6 @@ layout: PostSimple
 ---
 ```
 
----
 
 ## One-Time Setup
 
@@ -99,7 +95,7 @@ Go to your repo → **Settings → Secrets and variables → Actions → New rep
 | `NOTION_TOKEN` | Your `secret_...` integration token |
 | `NOTION_DATABASE_ID` | Your 32-char database ID |
 
----
+
 
 ## How to Trigger
 
@@ -109,7 +105,6 @@ Go to your repo → **Settings → Secrets and variables → Actions → New rep
 
 The workflow will run, sync all `Live` pages, and commit the results to your repo.
 
----
 
 ## How Sync Works
 
@@ -119,7 +114,6 @@ The workflow will run, sync all `Live` pages, and commit the results to your rep
 - Edits made in Notion will reflect on the next trigger
 - Images are downloaded locally so the repo is fully self-contained — no dependency on Notion's URLs
 
----
 
 ## Dependencies
 
